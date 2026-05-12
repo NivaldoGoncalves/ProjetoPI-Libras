@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LibrasConnect - Apresentação</title>
+    <title>LibrasConnect - Apresentação Oficial</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.js"></script>
     <style>
@@ -34,7 +34,7 @@
 
       main {
         display: grid;
-        grid-template-columns: 1fr 350px;
+        grid-template-columns: 1fr 380px;
         gap: 20px;
         padding: 20px;
         flex: 1;
@@ -64,7 +64,7 @@
         transform: scaleX(-1);
       }
 
-      /* Legenda em Tempo Real (Estilo Cinema) */
+      /* Legenda em Tempo Real */
       .subtitle-area {
         position: absolute;
         bottom: 40px;
@@ -74,15 +74,16 @@
         z-index: 10;
       }
       #current-sentence {
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.85);
         padding: 20px 40px;
-        border-radius: 10px;
-        font-size: 2.5rem;
+        border-radius: 15px;
+        font-size: 2.2rem;
         color: #fff;
         border-bottom: 5px solid var(--primary);
         display: inline-block;
         min-width: 50%;
-        max-width: 80%;
+        max-width: 90%;
+        word-wrap: break-word;
       }
 
       /* Painel Lateral */
@@ -93,10 +94,12 @@
         display: flex;
         flex-direction: column;
         gap: 15px;
+        overflow-y: auto;
       }
       .instruction {
         font-size: 0.9rem;
         color: #94a3b8;
+        margin-top: 0;
       }
 
       .action-btn {
@@ -117,17 +120,58 @@
         color: white;
       }
       .btn-speak:hover {
-        transform: scale(1.05);
         background: #3b82f6;
+        transform: translateY(-2px);
       }
 
-      /* Feedback de sinal detectado */
+      /* Caixa de Texto Livre */
+      .free-text-box {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid #334155;
+        padding: 15px;
+        border-radius: 12px;
+        margin-top: 10px;
+      }
+      .free-text-box h4 {
+        margin: 0 0 5px 0;
+        color: var(--accent);
+      }
+      .input-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .input-group input {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #475569;
+        background: #0f172a;
+        color: white;
+        font-size: 1rem;
+        outline: none;
+      }
+      .input-group input:focus {
+        border-color: var(--accent);
+      }
+      .btn-free {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 0 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .btn-free:hover {
+        background: #d97706;
+      }
+
       #live-detection {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         color: var(--accent);
         font-weight: bold;
         text-align: center;
-        height: 30px;
       }
 
       .loading-overlay {
@@ -144,12 +188,12 @@
   </head>
   <body>
     <div id="loading" class="loading-overlay">
-      <h2>LibrasConnect</h2>
-      <p>Carregando Inteligência Artificial...</p>
+      <h2>Preparando Apresentação...</h2>
+      <p>Iniciando câmera e IA</p>
     </div>
 
     <header>
-      <h2>Apresentação em Libras</h2>
+      <h2 style="margin: 0">✨ Apresentação em Libras</h2>
       <div id="live-detection">Aguardando sinal...</div>
     </header>
 
@@ -164,21 +208,45 @@
       </div>
 
       <div class="control-panel">
-        <h3>Controles</h3>
+        <h3>Montar Frase por Sinais</h3>
         <p class="instruction">
-          Faça o sinal e segure para escrever. O notebook lerá a frase final.
+          Faça o sinal para adicionar a palavra na legenda.
         </p>
 
         <button class="action-btn btn-speak" onclick="speakFullSentence()">
           🔊 LER FRASE (VOZ)
         </button>
         <button class="action-btn btn-clear" onclick="clearSentence()">
-          🗑️ LIMPAR TUDO
+          🗑️ LIMPAR TELA
         </button>
 
-        <div style="margin-top: 20px">
-          <h4>Sinais Configurados:</h4>
-          <ul id="sign-list" style="font-size: 0.85rem; color: #cbd5e1"></ul>
+        <div class="free-text-box">
+          <h4>Teclado Livre</h4>
+          <p class="instruction">
+            Para responder perguntas ou falar fora do roteiro:
+          </p>
+          <div class="input-group">
+            <input
+              type="text"
+              id="free-input"
+              placeholder="Digite sua frase aqui..."
+              onkeypress="handleEnter(event)"
+            />
+            <button class="btn-free" onclick="speakFreeText()">FALAR</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px">
+          <h4 style="color: #cbd5e1; margin-bottom: 5px">Sinais da IA:</h4>
+          <ul
+            id="sign-list"
+            style="
+              font-size: 0.85rem;
+              color: #94a3b8;
+              margin-top: 0;
+              padding-left: 20px;
+            "
+          ></ul>
         </div>
       </div>
     </main>
@@ -196,7 +264,8 @@
       const sentenceDisplay = document.getElementById("current-sentence");
       const liveDetection = document.getElementById("live-detection");
 
-      // MAPA DE SINAIS (Pode alterar aqui para o que ela vai apresentar)
+      // DICA: Vocês podem colocar FRASES INTEIRAS no lugar das palavras!
+      // Exemplo: fist: "Bom dia a todos, meu nome é Maria"
       const SIGN_MAP = {
         fist: "Olá",
         open: "Todos",
@@ -207,7 +276,6 @@
         ok: "Libras",
       };
 
-      // Preencher lista visual
       Object.values(SIGN_MAP).forEach((v) => {
         const li = document.createElement("li");
         li.innerText = v;
@@ -216,7 +284,7 @@
 
       async function setupCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: { width: 640, height: 480 },
           audio: false,
         });
         video.srcObject = stream;
@@ -258,7 +326,7 @@
 
           if (gesture) {
             const word = SIGN_MAP[gesture];
-            liveDetection.innerText = "Detectado: " + word;
+            liveDetection.innerText = "Sinal: " + word;
 
             if (word === lastDetectedSign) {
               detectionCounter++;
@@ -268,10 +336,9 @@
               isWriting = false;
             }
 
-            // Se segurar o sinal por ~1.5 segundos (30 frames)
             if (detectionCounter > 30 && !isWriting) {
               addWord(word);
-              isWriting = true; // Evita repetir a mesma palavra sem soltar a mão
+              isWriting = true;
             }
           }
         } else {
@@ -282,22 +349,17 @@
         requestAnimationFrame(detect);
       }
 
+      // Lógica de Sinais
       function addWord(word) {
         sentence.push(word);
         sentenceDisplay.innerText = sentence.join(" ");
-        // Som de "click" opcional ou feedback visual
-        sentenceDisplay.style.color = "#f59e0b";
-        setTimeout(() => {
-          sentenceDisplay.style.color = "white";
-        }, 300);
+        piscarLegenda();
       }
 
       function speakFullSentence() {
         const text = sentence.join(" ");
         if (!text) return;
-        const speech = new SpeechSynthesisUtterance(text);
-        speech.lang = "pt-BR";
-        window.speechSynthesis.speak(speech);
+        falarTexto(text);
       }
 
       function clearSentence() {
@@ -305,13 +367,60 @@
         sentenceDisplay.innerText = "...";
       }
 
+      // LÓGICA NOVA: TEXTO LIVRE
+      function speakFreeText() {
+        const input = document.getElementById("free-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Mostra na tela grande para todos lerem
+        sentenceDisplay.innerText = text;
+        piscarLegenda();
+
+        // Fala no som do notebook
+        falarTexto(text);
+
+        // Limpa o campo para a próxima frase
+        input.value = "";
+        // Limpa a memória de palavras dos sinais para não misturar
+        sentence = [];
+      }
+
+      // Permite apertar "Enter" para enviar o texto livre
+      function handleEnter(event) {
+        if (event.key === "Enter") {
+          speakFreeText();
+        }
+      }
+
+      // Funções Auxiliares
+      function piscarLegenda() {
+        sentenceDisplay.style.color = "#f59e0b"; // Fica laranja
+        setTimeout(() => {
+          sentenceDisplay.style.color = "white";
+        }, 400); // Volta pro branco
+      }
+
+      function falarTexto(text) {
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = "pt-BR";
+        speech.rate = 1.0; // Velocidade da voz normal
+        window.speechSynthesis.speak(speech);
+      }
+
       async function init() {
-        await setupCamera();
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        model = await handpose.load();
-        document.getElementById("loading").style.display = "none";
-        detect();
+        try {
+          await setupCamera();
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          model = await handpose.load();
+          document.getElementById("loading").style.display = "none";
+          detect();
+        } catch (e) {
+          alert(
+            "Erro ao acessar a câmera. Permita o uso da câmera no navegador.",
+          );
+        }
       }
 
       init();
