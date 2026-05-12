@@ -3,103 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LibrasConnect Pro - IA</title>
+    <title>LibrasConnect - Apresentação</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.js"></script>
     <style>
       :root {
         --primary: #2563eb;
-        --secondary: #10b981;
-        --bg: #f1f5f9;
-        --text: #0f172a;
+        --accent: #f59e0b;
+        --bg: #0f172a;
       }
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-family: "Segoe UI", sans-serif;
         background: var(--bg);
-        color: var(--text);
+        color: white;
         margin: 0;
+        overflow: hidden;
+        height: 100vh;
         display: flex;
         flex-direction: column;
-        height: 100vh;
       }
 
       header {
-        background: #1e293b;
-        color: white;
-        padding: 1rem 2rem;
+        padding: 15px 30px;
+        background: rgba(30, 41, 59, 0.8);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      }
-      .status-badge {
-        background: #475569;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #ef4444;
-        border-radius: 50%;
-      }
-      .status-dot.online {
-        background: #22c55e;
-        box-shadow: 0 0 8px #22c55e;
+        border-bottom: 2px solid var(--primary);
       }
 
       main {
         display: grid;
-        grid-template-columns: 250px 1fr 350px;
+        grid-template-columns: 1fr 350px;
         gap: 20px;
         padding: 20px;
         flex: 1;
-        overflow: hidden;
       }
 
-      /* Coluna 1: Dicionário */
-      .sidebar {
-        background: white;
-        border-radius: 15px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        overflow-y: auto;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      }
-      .sidebar h3 {
-        margin-top: 0;
-        font-size: 1rem;
-        color: #64748b;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 10px;
-      }
-      .sign-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 10px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
-      }
-      .sign-card span {
-        font-size: 1.2rem;
-      }
-
-      /* Coluna 2: Câmera */
-      .camera-container {
+      /* Área da Apresentadora */
+      .presentation-area {
         position: relative;
         background: #000;
-        border-radius: 15px;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
       }
       #video {
         width: 100%;
@@ -114,234 +62,161 @@
         width: 100%;
         height: 100%;
         transform: scaleX(-1);
-        z-index: 5;
       }
 
-      .detection-overlay {
+      /* Legenda em Tempo Real (Estilo Cinema) */
+      .subtitle-area {
         position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        width: 80%;
-      }
-      #gesture-box {
-        background: rgba(255, 255, 255, 0.95);
-        padding: 15px;
-        border-radius: 12px;
+        bottom: 40px;
+        left: 0;
+        right: 0;
         text-align: center;
-        border-bottom: 4px solid var(--primary);
-        display: none;
+        z-index: 10;
+      }
+      #current-sentence {
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 2.5rem;
+        color: #fff;
+        border-bottom: 5px solid var(--primary);
+        display: inline-block;
+        min-width: 50%;
+        max-width: 80%;
       }
 
-      /* Coluna 3: Chat */
-      .chat-container {
-        background: white;
-        border-radius: 15px;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      }
-      #chat-history {
-        flex: 1;
+      /* Painel Lateral */
+      .control-panel {
+        background: #1e293b;
+        border-radius: 20px;
         padding: 20px;
-        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 15px;
       }
-      .msg {
-        padding: 12px 16px;
-        border-radius: 12px;
-        max-width: 85%;
-        font-size: 0.95rem;
-        line-height: 1.4;
-      }
-      .msg.deaf {
-        align-self: flex-start;
-        background: #f1f5f9;
-        border-left: 4px solid var(--secondary);
-      }
-      .msg.listener {
-        align-self: flex-end;
-        background: var(--primary);
-        color: white;
+      .instruction {
+        font-size: 0.9rem;
+        color: #94a3b8;
       }
 
-      .chat-input-area {
-        padding: 20px;
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .input-group {
-        display: flex;
-        gap: 10px;
-      }
-      input {
-        flex: 1;
-        padding: 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.2s;
-      }
-      input:focus {
-        border-color: var(--primary);
-        outline: none;
-      }
-
-      .btn {
-        padding: 12px 20px;
+      .action-btn {
+        padding: 15px;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
+        font-weight: bold;
         cursor: pointer;
-        font-weight: 600;
-        transition: all 0.2s;
+        font-size: 1rem;
+        transition: 0.3s;
       }
-      .btn-primary {
+      .btn-speak {
         background: var(--primary);
         color: white;
       }
-      .btn-secondary {
-        background: var(--secondary);
+      .btn-clear {
+        background: #475569;
         color: white;
       }
-      .btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
+      .btn-speak:hover {
+        transform: scale(1.05);
+        background: #3b82f6;
+      }
+
+      /* Feedback de sinal detectado */
+      #live-detection {
+        font-size: 1.5rem;
+        color: var(--accent);
+        font-weight: bold;
+        text-align: center;
+        height: 30px;
       }
 
       .loading-overlay {
         position: fixed;
         inset: 0;
-        background: #1e293b;
-        color: white;
+        background: #0f172a;
         z-index: 1000;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 20px;
-      }
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
       }
     </style>
   </head>
   <body>
     <div id="loading" class="loading-overlay">
-      <div class="spinner"></div>
-      <h2>Inicializando Inteligência Artificial</h2>
-      <p>Aguardando acesso à webcam...</p>
+      <h2>LibrasConnect</h2>
+      <p>Carregando Inteligência Artificial...</p>
     </div>
 
     <header>
-      <div style="display: flex; align-items: center; gap: 15px">
-        <h2 style="margin: 0">🤟 LibrasConnect</h2>
-      </div>
-      <div class="status-badge">
-        <div id="status-dot" class="status-dot"></div>
-        <span id="status-text">IA Offline</span>
-      </div>
+      <h2>Apresentação em Libras</h2>
+      <div id="live-detection">Aguardando sinal...</div>
     </header>
 
     <main>
-      <div class="sidebar">
-        <h3>Sinais Suportados</h3>
-        <div class="sign-card"><span>✊</span> <b>Fist:</b> Oi / Tudo bem?</div>
-        <div class="sign-card"><span>✋</span> <b>Open:</b> Obrigado(a)</div>
-        <div class="sign-card"><span>👍</span> <b>Thumb:</b> Sim / Ótimo</div>
-        <div class="sign-card"><span>☝️</span> <b>Point:</b> Por favor</div>
-        <div class="sign-card"><span>✌️</span> <b>V:</b> Paz / Dois</div>
-        <div class="sign-card"><span>🤟</span> <b>Rock:</b> Eu te amo</div>
-        <div class="sign-card"><span>👌</span> <b>OK:</b> Entendi</div>
-      </div>
-
-      <div class="camera-container">
+      <div class="presentation-area">
         <video id="video" autoplay playsinline muted></video>
         <canvas id="canvas"></canvas>
-        <div class="detection-overlay">
-          <div id="gesture-box">
-            <small
-              style="
-                color: var(--primary);
-                font-weight: bold;
-                text-transform: uppercase;
-              "
-              >Sinal Detectado</small
-            >
-            <h2 id="sign-name" style="margin: 5px 0 0 0">...</h2>
-          </div>
+
+        <div class="subtitle-area">
+          <div id="current-sentence">...</div>
         </div>
       </div>
 
-      <div class="chat-container">
-        <div id="chat-history">
-          <div class="msg deaf">
-            Olá! Eu uso Libras. Como posso te ajudar hoje?
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <input
-            type="text"
-            id="input-msg"
-            placeholder="Digite aqui ou faça um sinal..."
-          />
-          <div class="input-group">
-            <button
-              class="btn btn-primary"
-              onclick="sendMsg('listener')"
-              style="flex: 1"
-            >
-              Enviar (Ouvinte)
-            </button>
-            <button
-              class="btn btn-secondary"
-              onclick="sendMsg('deaf')"
-              style="flex: 1"
-            >
-              Enviar (Surdo)
-            </button>
-          </div>
+      <div class="control-panel">
+        <h3>Controles</h3>
+        <p class="instruction">
+          Faça o sinal e segure para escrever. O notebook lerá a frase final.
+        </p>
+
+        <button class="action-btn btn-speak" onclick="speakFullSentence()">
+          🔊 LER FRASE (VOZ)
+        </button>
+        <button class="action-btn btn-clear" onclick="clearSentence()">
+          🗑️ LIMPAR TUDO
+        </button>
+
+        <div style="margin-top: 20px">
+          <h4>Sinais Configurados:</h4>
+          <ul id="sign-list" style="font-size: 0.85rem; color: #cbd5e1"></ul>
         </div>
       </div>
     </main>
 
     <script>
+      let model;
+      let sentence = [];
       let lastDetectedSign = "";
       let detectionCounter = 0;
+      let isWriting = false;
+
       const video = document.getElementById("video");
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const signNameSpan = document.getElementById("sign-name");
-      const gestureBox = document.getElementById("gesture-box");
-      let model;
+      const sentenceDisplay = document.getElementById("current-sentence");
+      const liveDetection = document.getElementById("live-detection");
 
+      // MAPA DE SINAIS (Pode alterar aqui para o que ela vai apresentar)
       const SIGN_MAP = {
-        fist: "Oi / Tudo bem?",
-        open: "Obrigado(a)",
-        thumb_up: "Sim / Ótimo",
-        point: "Por favor",
-        peace: "Paz / Dois",
-        rock: "Eu te amo",
-        ok: "Entendi / OK",
+        fist: "Olá",
+        open: "Todos",
+        thumb_up: "Bom dia",
+        point: "Eu",
+        peace: "Paz",
+        rock: "Amo",
+        ok: "Libras",
       };
+
+      // Preencher lista visual
+      Object.values(SIGN_MAP).forEach((v) => {
+        const li = document.createElement("li");
+        li.innerText = v;
+        document.getElementById("sign-list").appendChild(li);
+      });
 
       async function setupCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 640, height: 480 },
+          video: true,
           audio: false,
         });
         video.srcObject = stream;
@@ -352,28 +227,25 @@
 
       function getGesture(landmarks) {
         const finger = (tip, pip) => landmarks[tip][1] < landmarks[pip][1];
-
         const i = finger(8, 6);
         const m = finger(12, 10);
         const r = finger(16, 14);
         const p = finger(20, 18);
-        const t = landmarks[4][1] < landmarks[3][1]; // Simplificado
+        const t = landmarks[4][1] < landmarks[3][1];
 
-        // Lógica de Sinais
         if (i && m && !r && !p) return "peace";
         if (i && p && !m && !r) return "rock";
         if (i && !m && !r && !p) return "point";
-
-        const distOK = Math.hypot(
-          landmarks[8][0] - landmarks[4][0],
-          landmarks[8][1] - landmarks[4][1],
-        );
-        if (distOK < 35 && m && r && p) return "ok";
-
+        if (
+          Math.hypot(
+            landmarks[8][0] - landmarks[4][0],
+            landmarks[8][1] - landmarks[4][1],
+          ) < 30
+        )
+          return "ok";
         if (t && !i && !m && !r && !p) return "thumb_up";
         if (i && m && r && p) return "open";
         if (!i && !m && !r && !p) return "fist";
-
         return null;
       }
 
@@ -382,89 +254,64 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (predictions.length > 0) {
-          // Feedback visual das juntas
-          const landmarks = predictions[0].landmarks;
-          drawHand(landmarks);
+          const gesture = getGesture(predictions[0].landmarks);
 
-          const gesture = getGesture(landmarks);
           if (gesture) {
-            const text = SIGN_MAP[gesture];
-            if (text === lastDetectedSign) {
+            const word = SIGN_MAP[gesture];
+            liveDetection.innerText = "Detectado: " + word;
+
+            if (word === lastDetectedSign) {
               detectionCounter++;
             } else {
-              lastDetectedSign = text;
+              lastDetectedSign = word;
               detectionCounter = 0;
+              isWriting = false;
             }
 
-            // Exige que o sinal fique estável por 12 frames (~0.5s)
-            if (detectionCounter > 12) {
-              signNameSpan.innerText = text;
-              gestureBox.style.display = "block";
-              document.getElementById("input-msg").value = text;
+            // Se segurar o sinal por ~1.5 segundos (30 frames)
+            if (detectionCounter > 30 && !isWriting) {
+              addWord(word);
+              isWriting = true; // Evita repetir a mesma palavra sem soltar a mão
             }
           }
         } else {
-          gestureBox.style.display = "none";
+          liveDetection.innerText = "Aguardando sinal...";
+          lastDetectedSign = "";
           detectionCounter = 0;
         }
-
         requestAnimationFrame(detect);
       }
 
-      function drawHand(landmarks) {
-        ctx.fillStyle = "#2563eb";
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        for (let i = 0; i < landmarks.length; i++) {
-          const x = landmarks[i][0];
-          const y = landmarks[i][1];
-          ctx.beginPath();
-          ctx.arc(x, y, 4, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.stroke();
-        }
+      function addWord(word) {
+        sentence.push(word);
+        sentenceDisplay.innerText = sentence.join(" ");
+        // Som de "click" opcional ou feedback visual
+        sentenceDisplay.style.color = "#f59e0b";
+        setTimeout(() => {
+          sentenceDisplay.style.color = "white";
+        }, 300);
       }
 
-      function sendMsg(type) {
-        const input = document.getElementById("input-msg");
-        if (!input.value) return;
-
-        const history = document.getElementById("chat-history");
-        const div = document.createElement("div");
-        div.className = `msg ${type}`;
-        div.innerHTML = `<strong>${type === "deaf" ? "🤟 Surdo" : "👂 Ouvinte"}:</strong><br>${input.value}`;
-
-        history.appendChild(div);
-        history.scrollTop = history.scrollHeight;
-
-        // Síntese de Voz
-        const speech = new SpeechSynthesisUtterance(input.value);
+      function speakFullSentence() {
+        const text = sentence.join(" ");
+        if (!text) return;
+        const speech = new SpeechSynthesisUtterance(text);
         speech.lang = "pt-BR";
-        speech.rate = 1.1;
         window.speechSynthesis.speak(speech);
+      }
 
-        input.value = "";
-        gestureBox.style.display = "none";
-        lastDetectedSign = "";
-        detectionCounter = 0;
+      function clearSentence() {
+        sentence = [];
+        sentenceDisplay.innerText = "...";
       }
 
       async function init() {
-        try {
-          await setupCamera();
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-
-          model = await handpose.load();
-
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("status-dot").classList.add("online");
-          document.getElementById("status-text").innerText = "IA Pronta";
-
-          detect();
-        } catch (e) {
-          alert("Erro: Certifique-se de usar HTTPS e permitir a câmera.");
-        }
+        await setupCamera();
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        model = await handpose.load();
+        document.getElementById("loading").style.display = "none";
+        detect();
       }
 
       init();
